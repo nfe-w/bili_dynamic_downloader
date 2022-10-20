@@ -10,7 +10,7 @@
 ```shell
 pip install -r requirements.txt
 # 修改 bili_dynamic_downloader.py 中的 uid
-python3 getDynamics.py
+python3 bili_dynamic_downloader.py
 ```
 
 > 参考 https://github.com/Starrah/BilibiliGetDynamics ，并加以修改，感谢
