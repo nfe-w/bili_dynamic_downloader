@@ -131,14 +131,18 @@ def download_pic(save_dir, obj_array):
         current_dynamic_base = download_base + '/' + time.strftime("%Y-%m-%d_%H%M%S", time.localtime(item['timestamp']))
         os.makedirs(current_dynamic_base, exist_ok=True)
 
-        if item['item']['content'] is not None:
+        if 'content' in item['item'] and item['item']['content'] is not None:
             with open(current_dynamic_base + '/content.txt', 'w', encoding='UTF-8') as f:
                 f.write(item['item']['content'])
                 f.flush()
-        if item['item']['description'] is not None:
+        if 'description' in item['item'] and item['item']['description'] is not None:
             with open(current_dynamic_base + '/description.txt', 'w', encoding='UTF-8') as f:
                 f.write(item['item']['description'])
                 f.flush()
+
+        with open(current_dynamic_base + '/info.json', 'w', encoding='UTF-8') as f:
+            f.write(json.dumps(item['item'], ensure_ascii=False))
+            f.flush()
 
         for url in pictures:
             pic_info_list.append({
