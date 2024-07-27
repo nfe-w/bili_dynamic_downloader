@@ -12,7 +12,11 @@ import os
 import time
 
 import aiohttp
+from bilibili_api import Credential
+from bilibili_api import settings
 from bilibili_api import user
+
+settings.http_client = settings.HTTPClient.HTTPX
 
 uid = 672328094  # 用户uid
 need_download = True  # 是否下载动态
@@ -21,7 +25,15 @@ skip_text_only = True  # 是否跳过纯文字动态
 
 if not uid:
     exit(1)
-u = user.User(uid=uid)
+
+# see https://nemo2011.github.io/bilibili-api/#/get-credential
+sessdata = "你的 SESSDATA"
+bili_jct = '你的 bili_jct'
+buvid3 = '你的 buvid3'
+dedeuserid = '你的 DedeUserID'
+ac_time_value = '你的 ac_time_value'
+credential = Credential(sessdata=sessdata, bili_jct=bili_jct, buvid3=buvid3, dedeuserid=dedeuserid, ac_time_value=ac_time_value)
+u = user.User(uid=uid, credential=credential)
 
 semaphore = 50  # 并发量
 
@@ -65,7 +77,7 @@ async def get_all_json(obj_array):
                 'type': card['desc']['type'],
                 'item': get_item_info(card['card'])
             }
-            if 'origin' in card['card']:
+            if 'origin' in card['card'] and card['card']['origin'] != '' and card['card']['origin'] != '源动态不见了':
                 origin_obj = json.loads(card['card']['origin'])
                 card_main_info['origin'] = get_item_info(origin_obj)
                 if 'user' in origin_obj and 'name' in origin_obj['user']:
@@ -81,7 +93,7 @@ async def download_with_aiohttp(sem, pic_url, file_name, save_dir, client):
             print(f'---{file_path} already exist...\r')
         else:
             print(f'---{file_path} downloading...\r')
-            async with client.get(pic_url) as response:
+            async with client.get(pic_url, verify_ssl=False) as response:
                 if response.status == 200:
                     content = await response.content.read()
                     await asyncio.sleep(0)

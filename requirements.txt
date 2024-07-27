@@ -1,2 +1,2 @@
-aiohttp
-bilibili_api
+aiohttp==3.9.5
+bilibili-api-python==16.2.0
