@@ -20,6 +20,7 @@ settings.http_client = settings.HTTPClient.HTTPX
 
 uid = 672328094  # 用户uid
 need_download = True  # 是否下载动态
+download_by_json = False  # 是否从json文件中读取下载
 skip_forward_and_video = True  # 是否跳过转发动态和视频投稿的封面
 skip_text_only = True  # 是否跳过纯文字动态
 
@@ -65,7 +66,7 @@ async def get_all_json(obj_array):
     offset = 0
     while True:
         print(f'fetch, offset->{offset}')
-        res = await u.get_dynamics(offset)
+        res = await u.get_dynamics(offset, need_top=True)
         if res['has_more'] != 1:
             break
         offset = res['next_offset']
@@ -172,11 +173,16 @@ def real_main():
     os.makedirs(save_dir, exist_ok=True)
 
     obj_array = []
-    asyncio.get_event_loop().run_until_complete(get_all_json(obj_array))
-    with open(save_dir + '/result.json', 'w', encoding='UTF-8') as f:
-        f.write(json.dumps(obj_array, ensure_ascii=False))
-        f.flush()
-    print('===> 获取全部json完毕')
+    if not download_by_json:
+        asyncio.get_event_loop().run_until_complete(get_all_json(obj_array))
+        with open(save_dir + '/result.json', 'w', encoding='UTF-8') as f:
+            f.write(json.dumps(obj_array, ensure_ascii=False))
+            f.flush()
+        print('===> 获取全部json完毕')
+    else:
+        with open(save_dir + '/result.json', 'r', encoding='UTF-8') as f:
+            obj_array = json.load(f)
+        print('===> 从文件中读取全部json完毕')
     if need_download:
         download_pic(save_dir, obj_array)
 
