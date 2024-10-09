@@ -26,8 +26,8 @@ def get_opus_feed(host_mid):
         'host_mid': host_mid,
         'page': 1,
         'web_location': '0.0',
-        'offset': '',   # 初始时 offset 为空
-        'w_webid': ''   #替换为你的 w_webid
+        'offset': '',  # 初始时 offset 为空
+        'w_webid': ''
     }
     headers = {
         'accept': '*/*',
@@ -80,8 +80,8 @@ async def process_opus(opus_data, session):
         print(f"Failed to retrieve data for opus_id {opus_id}: {e}")
         return
 
-    # 调试打印
-    print(f"Data for opus_id {opus_id}: {data}")  # 打印出获取到的数据以供分析
+    # 调试打印407202351
+    #print(f"Data for opus_id {opus_id}: {data}")  # 打印出获取到的数据以供分析
 
     # 解析标题和内容
     item = data.get("item", {})
@@ -107,21 +107,35 @@ async def process_opus(opus_data, session):
     # 准备 Markdown 内容
     markdown_content = f"# {title}\n\n"
 
-    # 下载图片并生成 Markdown
+        # 下载图片并生成 Markdown
     for paragraph in content:
         para_type = paragraph.get("para_type")
+
         if para_type == 1:  # 文本段落
             text_nodes = paragraph.get("text", {}).get("nodes", [])
-            for node in text_nodes:
-                markdown_content += node["word"]["words"] + "\n"
+            if text_nodes:  # 检查是否存在 text_nodes
+                for node in text_nodes:
+                    # 检查节点是否具有 'word' 和 'words'
+                    if 'word' in node and 'words' in node['word']:
+                        markdown_content += node["word"]["words"] + "\n"
+                    else:
+                        print(f"节点格式不正确，跳过: {node}")
+
         elif para_type == 2:  # 图片段落
             pics = paragraph.get("pic", {}).get("pics", [])
-            for pic in pics:
-                image_url = pic.get("url")
-                if image_url:
-                    image_name = await download_image(session, image_url, title)
-                    if image_name:
-                        markdown_content += f"![Image]({image_name})\n"
+            if pics:  # 检查是否存在 pics
+                for pic in pics:
+                    image_url = pic.get("url")
+                    if image_url:
+                        image_name = await download_image(session, image_url, title)
+                        if image_name:
+                            markdown_content += f"![Image]({image_name})\n"
+                    else:
+                        print(f"图片节点缺少 'url'，跳过: {pic}")
+
+        else:
+            print(f"未知的段落类型: {para_type}")
+
 
     # 保存 Markdown 文件
     markdown_file_path = os.path.join(title_dir, f"{title}.md")
